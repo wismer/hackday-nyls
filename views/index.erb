@@ -32,15 +32,40 @@
 
         var bikeLayer = new google.maps.BicyclingLayer();
         bikeLayer.setMap(map);
+        var min = 0;
+        var num = 100;
 
+        var bikeMarkers = [];
 
-        for (var i = 0; i < 100; i++) {
-          var pt = data[i];
-          var point = new google.maps.Marker({
-            position: { lat: parseFloat(pt.LATITUDE), lng: parseFloat(pt.LONGITUDE) },
-            map: map
-          })
+        function addSet() {
+          for (var i = 0; i < data.length; i++) {
+            var pt = data[i];
+            var point = new google.maps.Marker({
+              position: { lat: parseFloat(pt.LATITUDE), lng: parseFloat(pt.LONGITUDE) },
+              map: null
+            })
+            bikeMarkers.push(point);
+          }
         }
+
+        addSet();
+
+        function setMarkers() {
+          for (var i = min; i < num; i++) {
+            var marker = bikeMarkers[i];
+
+            marker.setMap(map)
+
+            if (i > 100) {
+              var old = bikeMarkers[i - 100];
+              old.setMap(null)
+            }
+          }
+
+          min += 100;
+          num += 100;
+        }
+        setInterval(setMarkers, 1000)
         // data.forEach(function(pt){
         //   var point = new google.maps.Marker({
         //     position: { lat: pt.LATITUDE, lng: pt.LONGITUDE },
