@@ -4,15 +4,17 @@ import json
 import cPickle as pickle
 
 
-
+#open the csv file. The rU indicates universal newline mode. I think the dialect is unnecessary but haven't tried taking it out
 f = open('accidents.csv', "rU")
 csv_f = csv.reader(f, dialect=csv.excel_tab)
 
 accidents = []
+
+#the first row of the csv file is the header-->list of column names
 colnamesstr= csv_f.next()
 colnames=colnamesstr[0].split(",")
 
-#["DATE","TIME","BOROUGH","ZIP CODE","LATITUDE","LONGITUDE","LOCATION","ON STREET NAME","CROSS STREET NAME","OFF STREET NAME","NUMBER OF PERSONS INJURED","NUMBER OF PERSONS KILLED","NUMBER OF PEDESTRIANS INJURED","NUMBER OF PEDESTRIANS KILLED","NUMBER OF CYCLIST INJURED","NUMBER OF CYCLIST KILLED","NUMBER OF MOTORIST INJURED","NUMBER OF MOTORIST KILLED","CONTRIBUTING FACTOR VEHICLE 1","CONTRIBUTING FACTOR VEHICLE 2","CONTRIBUTING FACTOR VEHICLE 3","CONTRIBUTING FACTOR VEHICLE 4","CONTRIBUTING FACTOR VEHICLE 5","UNIQUE KEY","VEHICLE TYPE CODE 1","VEHICLE TYPE CODE 2","VEHICLE TYPE CODE 3","VEHICLE TYPE CODE 4","VEHICLE TYPE CODE 5"]
+#retrieves information from sunrise-sunset api for a given lat/lng/date. Checks to see if given time is between sunrise and sunset
 def setDark(time, lat, lng, date):
 	content=requests.get("http://api.sunrise-sunset.org/json?lat=%s&lng=%s&date=%s" %(lat,lng,date)).content
 	sunset=str(json.loads(content)[u'results'][u'sunset'])
@@ -25,6 +27,7 @@ def setDark(time, lat, lng, date):
 		dark=True
 	return dark
 
+#reads each row of csv into list. Zips (combines) this list with colnames into a dictionary with colnames as keys. Adds dark as boolean
 for row in csv_f:
 	rowaslist=[item for item in csv.reader([row[0]],skipinitialspace=True)][0]
 	newacc=(dict(zip(colnames, rowaslist)))
@@ -36,10 +39,12 @@ for row in csv_f:
 	accidents.append(newacc)
 	
 
-
+#just checking
 print type(accidents[1])
 print accidents[1]
 print len(accidents)
+
+#dump the info into a file
 pickle.dump( accidents, open( "accidents.p", "wb" ) )
 
 
