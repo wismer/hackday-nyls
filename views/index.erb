@@ -12,7 +12,10 @@
       }
     </style>
     <%= data %>
-    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true"></script>
+    <!-- // <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true"></script> -->
+
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=visualization&sensor=true_or_false">
+    </script>
     <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
     <script>
       var mapData;
@@ -33,17 +36,17 @@
             mapOptions);
 
 
-        var bikeLayer = new google.maps.BicyclingLayer();
-        bikeLayer.setMap(map);
-        var min = 0;
-        var num = 100;
-
-        var bikeMarkers = [];
-
         function addSet() {
           for (var date in data) {
             var pts = data[date];
             var markers = pts.map(function(pt){
+              var latitude = pt.LATITUDE;
+              var longitude = pt.LONGITUDE;
+
+              if (latitude !== "" && longitude !== "") {
+                pt.coordinate = new google.maps.LatLng(parseFloat(pt.LATITUDE), parseFloat(pt.LONGITUDE))
+              }
+
               pt.marker = new google.maps.Marker({
                 position: { lat: parseFloat(pt.LATITUDE), lng: parseFloat(pt.LONGITUDE) },
                 map: null
@@ -98,26 +101,28 @@
         }
 
         function setMarkers() {
-          bikeMarkers.forEach(function(marker, index){
-            setTimeout(fadeIn, index * 100, marker)
-            setTimeout(fadeOut, (index * 100) + 1000, marker)
-          })
+          var pts = [];
+          for (var date in data) {
+            var places = data[date].forEach(function(pt){
+              if (pt.coordinate) {
+                pts.push(pt.coordinate)
+              }
+            })
+          }
 
-          // for (var i = min; i < num; i++) {
-          //   var marker = bikeMarkers[i];
-          //   setTimeout(fadeIn, num, marker);
-          //   // marker.setMap(map)
+          var heatmap = new google.maps.visualization.HeatmapLayer({
+            data: pts,
+            radius: 25,
+            opacity: 0.5
+          });
 
-          //   if (i > 100) {
-          //     var old = bikeMarkers[i - 100];
-          //     setTimeout(fadeOut, 500, old)
-          //     // old.setMap(null)
-          //   }
+          setTimeout(function(){
+            var bikeLayer = new google.maps.BicyclingLayer();
+            bikeLayer.setMap(map);
+          }, 6000)
 
-          // }
 
-          // min += 100;
-          // num += 100;
+          heatmap.setMap(map);
         }
         setMarkers()
         // setInterval(setMarkers, 1000)
