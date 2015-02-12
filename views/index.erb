@@ -18,6 +18,9 @@
       var mapData;
       var map;
       function initialize() {
+
+        var barSlider = document.createElement("input")
+
         var myLatlng = new google.maps.LatLng(40.712784, -74.005941);
 
         var mapOptions = {
@@ -38,34 +41,86 @@
         var bikeMarkers = [];
 
         function addSet() {
-          for (var i = 0; i < data.length; i++) {
-            var pt = data[i];
-            var point = new google.maps.Marker({
-              position: { lat: parseFloat(pt.LATITUDE), lng: parseFloat(pt.LONGITUDE) },
-              map: null
+          for (var date in data) {
+            var pts = data[date];
+            var markers = pts.map(function(pt){
+              pt.marker = new google.maps.Marker({
+                position: { lat: parseFloat(pt.LATITUDE), lng: parseFloat(pt.LONGITUDE) },
+                map: null
+              })
+
+              return pt
             })
-            bikeMarkers.push(point);
+            data[date] = markers;
           }
         }
 
         addSet();
 
-        function setMarkers() {
-          for (var i = min; i < num; i++) {
-            var marker = bikeMarkers[i];
+        function fadeOut(marker) {
+          marker.setMap(null)
+        }
 
-            marker.setMap(map)
+        function fadeIn(marker) {
+          marker.setMap(map)
+        }
 
-            if (i > 100) {
-              var old = bikeMarkers[i - 100];
-              old.setMap(null)
-            }
+
+        var slider = document.getElementById("date-input");
+        var sliderBar = document.getElementById("date-slider")
+        var dates = Object.keys(data);
+
+        var currentMarkers;
+
+        sliderBar.oninput = function(e) {
+          var date = dates[(dates.length - 1) - parseInt(e.target.value)];
+          slider.value = date;
+          if (currentMarkers) {
+            currentMarkers.forEach(function(pt){
+              fadeOut(pt.marker)
+            })
           }
 
-          min += 100;
-          num += 100;
+          currentMarkers = data[date];
+
+          if (currentMarkers) {
+            currentMarkers.forEach(function(pt){
+              fadeIn(pt.marker)
+            })
+          }
+
         }
-        setInterval(setMarkers, 1000)
+
+        slider.oninput = function(e) {
+          var pts = e.target.value;
+
+          console.log(pts)
+        }
+
+        function setMarkers() {
+          bikeMarkers.forEach(function(marker, index){
+            setTimeout(fadeIn, index * 100, marker)
+            setTimeout(fadeOut, (index * 100) + 1000, marker)
+          })
+
+          // for (var i = min; i < num; i++) {
+          //   var marker = bikeMarkers[i];
+          //   setTimeout(fadeIn, num, marker);
+          //   // marker.setMap(map)
+
+          //   if (i > 100) {
+          //     var old = bikeMarkers[i - 100];
+          //     setTimeout(fadeOut, 500, old)
+          //     // old.setMap(null)
+          //   }
+
+          // }
+
+          // min += 100;
+          // num += 100;
+        }
+        setMarkers()
+        // setInterval(setMarkers, 1000)
         // data.forEach(function(pt){
         //   var point = new google.maps.Marker({
         //     position: { lat: pt.LATITUDE, lng: pt.LONGITUDE },
@@ -75,11 +130,13 @@
 
       }
       google.maps.event.addDomListener(window, "load", initialize)
-
     </script>
   </head>
   <body>
     <div id="map-canvas"></div>
-
+    <div id="slider" style="position: fixed; bottom: 100px; right: 100px;">
+      <input id='date-input' type='text' value='' />
+      <input id='date-slider' value='0' type='range' min='0' max=<%= dates.length - 1 %> />
+    </div>
   </body>
 </html>
